@@ -1,0 +1,69 @@
+name: Build packages
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write # to attach the packages to a release when a v* tag is pushed
+
+jobs:
+  packages:
+    runs-on: ubuntu-latest
+    # Debian 13 has Qt 6 and KDE Frameworks 6, needed to build the Dolphin badge plugin. Packages
+    # built here run on Debian 13 / Ubuntu 25.04 and newer, Fedora 42+, and Arch Linux.
+    container: debian:trixie
+    steps:
+      - name: Install build tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates curl git build-essential pkg-config \
+            qt6-base-dev qt6-base-dev-tools libkf6kiocore6 libxkbcommon-dev
+
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --component clippy,rustfmt
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Lint
+        run: cargo clippy --all-targets --locked
+
+      - name: Test
+        run: cargo test --locked
+
+      - name: Build packages
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then export VERSION="${GITHUB_REF_NAME#v}"; fi
+          export HOMEPAGE="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+          ./packaging/build-packages.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: drive-for-linux-packages
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

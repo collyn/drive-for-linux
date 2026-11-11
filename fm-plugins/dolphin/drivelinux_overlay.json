@@ -1,0 +1,6 @@
+{
+    "KPlugin": {
+        "Name": "Drive For Linux sync status",
+        "Description": "Shows Google Drive sync status on files"
+    }
+}

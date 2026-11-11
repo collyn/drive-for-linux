@@ -1,0 +1,32 @@
+[package]
+name = "drive-linux"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow", "wayland", "x11"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+rfd = "0.18"
+dirs = "7"
+# Already built for egui_extras' SVG support; used to turn the logo into the window/tray icon.
+resvg = { version = "0.45", default-features = false }
+egui_extras = { version = "0.37", features = ["svg", "image"] }
+ksni = { version = "0.3.7", features = ["blocking"] }
+notify = "8"
+signal-hook = "0.3"
+# Already built for winit; used to give the X11 window its full class name (app.rs set_window_class).
+raw-window-handle = "0.6"
+x11rb = "0.13"
+
+[profile.release]
+opt-level = 2
+
+[profile.dev]
+debug = false
+incremental = false
+
+[profile.dev.package."*"]
+debug = false
+opt-level = 1

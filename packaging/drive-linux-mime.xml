@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-drive-linux-gdoc"><comment>Google Document</comment><comment xml:lang="vi">Tài liệu Google</comment><generic-icon name="x-office-document"/><glob pattern="*.gdoc"/></mime-type>
+  <mime-type type="application/x-drive-linux-gslides"><comment>Google Presentation</comment><comment xml:lang="vi">Bản trình bày Google</comment><generic-icon name="x-office-presentation"/><glob pattern="*.gslides"/></mime-type>
+  <mime-type type="application/x-drive-linux-gform"><comment>Google Form</comment><comment xml:lang="vi">Biểu mẫu Google</comment><generic-icon name="x-office-document"/><glob pattern="*.gform"/></mime-type>
+  <mime-type type="application/x-drive-linux-gsheet"><comment>Google Sheets</comment><comment xml:lang="vi">Bảng tính Google</comment><generic-icon name="x-office-spreadsheet"/><glob pattern="*.gsheet"/></mime-type>
+  <mime-type type="application/x-drive-linux-gdraw"><comment>Google Drawing</comment><comment xml:lang="vi">Bản vẽ Google</comment><generic-icon name="image-x-generic"/><glob pattern="*.gdraw"/></mime-type>
+  <mime-type type="application/x-drive-linux-gtable"><comment>Google Table</comment><comment xml:lang="vi">Bảng Fusion của Google</comment><generic-icon name="x-office-spreadsheet"/><glob pattern="*.gtable"/></mime-type>
+  <mime-type type="application/x-drive-linux-gmap"><comment>Google Map</comment><comment xml:lang="vi">Bản đồ Google</comment><generic-icon name="text-html"/><glob pattern="*.gmap"/></mime-type>
+  <mime-type type="application/x-drive-linux-gscript"><comment>Google Script</comment><comment xml:lang="vi">Dự án Google Apps Script</comment><generic-icon name="text-x-script"/><glob pattern="*.gscript"/></mime-type>
+  <mime-type type="application/x-drive-linux-gsite"><comment>Google Site</comment><comment xml:lang="vi">Trang web Google Sites</comment><generic-icon name="text-html"/><glob pattern="*.gsite"/></mime-type>
+  <mime-type type="application/x-drive-linux-gmaillayout"><comment>Email layout</comment><comment xml:lang="vi">Bố cục Gmail</comment><generic-icon name="text-html"/><glob pattern="*.gmaillayout"/></mime-type>
+  <mime-type type="application/x-drive-linux-gnote"><comment>Google Note</comment><comment xml:lang="vi">Ghi chú Google Keep</comment><generic-icon name="text-x-generic"/><glob pattern="*.gnote"/></mime-type>
+  <mime-type type="application/x-drive-linux-glink"><comment>Google Drive Link</comment><comment xml:lang="vi">Đường liên kết Google Drive</comment><generic-icon name="text-html"/><glob pattern="*.glink"/></mime-type>
+  <mime-type type="application/x-drive-linux-gjam"><comment>Google Jam</comment><comment xml:lang="vi">Google Jamboard</comment><generic-icon name="image-x-generic"/><glob pattern="*.gjam"/></mime-type>
+  <mime-type type="application/x-drive-linux-gvid"><comment>Google Vids</comment><comment xml:lang="vi">Video Google Vids</comment><generic-icon name="video-x-generic"/><glob pattern="*.gvid"/></mime-type>
+  <mime-type type="application/x-drive-linux-gprj"><comment>Google Project</comment><comment xml:lang="vi">Dự án Google</comment><generic-icon name="text-x-generic"/><glob pattern="*.gprj"/></mime-type>
+  <mime-type type="application/x-drive-linux-gpic"><comment>Google Pics</comment><comment xml:lang="vi">Ảnh Google</comment><generic-icon name="image-x-generic"/><glob pattern="*.gpic"/></mime-type>
+</mime-info>

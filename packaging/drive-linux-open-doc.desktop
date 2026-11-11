@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Google Docs (Drive For Linux)
+Name[vi]=Google Tài liệu (Drive For Linux)
+Icon=/usr/share/icons/hicolor/scalable/apps/drivelinux.svg
+Exec=drive-linux --open-doc %f
+Terminal=false
+NoDisplay=true
+MimeType=application/x-drive-linux-gdoc;application/x-drive-linux-gslides;application/x-drive-linux-gform;application/x-drive-linux-gsheet;application/x-drive-linux-gdraw;application/x-drive-linux-gtable;application/x-drive-linux-gmap;application/x-drive-linux-gscript;application/x-drive-linux-gsite;application/x-drive-linux-gmaillayout;application/x-drive-linux-gnote;application/x-drive-linux-glink;application/x-drive-linux-gjam;application/x-drive-linux-gvid;application/x-drive-linux-gprj;application/x-drive-linux-gpic;

@@ -1,0 +1,83 @@
+# Package description for nfpm (https://nfpm.goreleaser.com): one file for .deb, .rpm and Arch.
+# Run from the project folder after `cargo build --release`:
+#   VERSION=0.1.0 nfpm package -f packaging/nfpm.yaml -p deb -t dist/
+name: drive-for-linux
+arch: amd64
+platform: linux
+version: ${VERSION}
+version_schema: semver
+release: 1
+section: net
+priority: optional
+maintainer: "Drive For Linux contributors"
+homepage: ${HOMEPAGE}
+description: |
+  Keep your Google Drive files on your Linux computer.
+  Stream or mirror My Drive and shared drives, back up folders and USB drives,
+  and see sync status in Dolphin and GNOME Files. Independent project, not made
+  by Google; connects through rclone.
+
+contents:
+  - src: target/release/drive-linux
+    dst: /usr/bin/drive-linux
+    file_info:
+      mode: 0755
+  - src: packaging/drive-linux.desktop
+    dst: /usr/share/applications/drive-linux.desktop
+    file_info:
+      mode: 0644
+  - src: packaging/drive-linux-open-doc.desktop
+    dst: /usr/share/applications/drive-linux-open-doc.desktop
+    file_info:
+      mode: 0644
+  - src: packaging/drive-linux-mime.xml
+    dst: /usr/share/mime/packages/drive-linux.xml
+    file_info:
+      mode: 0644
+  - src: assets/logo.svg
+    dst: /usr/share/icons/hicolor/scalable/apps/drivelinux.svg
+    file_info:
+      mode: 0644
+  - src: README.md
+    dst: /usr/share/doc/drive-for-linux/README.md
+    file_info:
+      mode: 0644
+  - src: README.vi.md
+    dst: /usr/share/doc/drive-for-linux/README.vi.md
+    file_info:
+      mode: 0644
+
+# The program itself only needs the C library; the rest is loaded when it starts or used as tools.
+# The Dolphin badge plugin is carried inside the program and uses Qt/KDE only where Dolphin is installed.
+depends:
+  - rclone
+  - curl
+overrides:
+  deb:
+    depends:
+      - rclone
+      - curl
+      - libnotify-bin
+      - libglib2.0-bin
+      - libxkbcommon0
+      - libegl1
+    recommends:
+      - xdg-desktop-portal
+  rpm:
+    depends:
+      - rclone
+      - curl
+      - libnotify
+      - glib2
+      - libxkbcommon
+      - mesa-libEGL
+    recommends:
+      - xdg-desktop-portal
+  archlinux:
+    depends:
+      - rclone
+      - curl
+      - libnotify
+      - glib2
+      - libxkbcommon
+      - libglvnd

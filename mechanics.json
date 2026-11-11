@@ -1,0 +1,674 @@
+{
+  "version": 1,
+  "values": [
+    {
+      "name": "download rate min",
+      "group": "bandwidth",
+      "value": 1,
+      "unit": "kB/s",
+      "source": "preferences_dialog.bin #download-rate-input"
+    },
+    {
+      "name": "download rate max",
+      "group": "bandwidth",
+      "value": 100000000,
+      "unit": "kB/s",
+      "source": "preferences_dialog.bin #download-rate-input"
+    },
+    {
+      "name": "upload rate min",
+      "group": "bandwidth",
+      "value": 1,
+      "unit": "kB/s",
+      "source": "preferences_dialog.bin #upload-rate-input"
+    },
+    {
+      "name": "upload rate max",
+      "group": "bandwidth",
+      "value": 100000000,
+      "unit": "kB/s",
+      "source": "preferences_dialog.bin #upload-rate-input"
+    },
+    {
+      "name": "rate unit multiplier",
+      "group": "bandwidth",
+      "value": 1024,
+      "unit": "bytes per kB",
+      "source": "function 0x1005d5cb0"
+    },
+    {
+      "name": "cache size limit min",
+      "group": "cache",
+      "value": 1,
+      "unit": "GB",
+      "source": "preferences_dialog.bin #cache-size-limit-input"
+    },
+    {
+      "name": "cache size limit max",
+      "group": "cache",
+      "value": 100000000,
+      "unit": "GB",
+      "source": "preferences_dialog.bin #cache-size-limit-input"
+    },
+    {
+      "name": "cache size unit",
+      "group": "cache",
+      "value": "GB",
+      "source": "cache_size_limit_units string: 'GB' between 'Cache size limit' and 'Enter a value between 1 and {UPPER_LIMIT}.' in the string tables (e.g. 0x102a07c92); shown as the field suffix (preferences_dialog.bin a.j=B(e,101))"
+    },
+    {
+      "name": "default Drive mode",
+      "group": "sync",
+      "value": "stream",
+      "source": "preferences strings order: Stream files listed first"
+    },
+    {
+      "name": "max accounts in original",
+      "group": "account",
+      "value": 4,
+      "source": "Vietnamese string table"
+    },
+    {
+      "name": "launch on login default",
+      "group": "general",
+      "value": true,
+      "source": "flag default gui_autostart_option @0x103f5224f"
+    },
+    {
+      "name": "mirror re-check when watching or the change list fails",
+      "group": "sync",
+      "value": 120,
+      "unit": "s",
+      "estimated": true
+    },
+    {
+      "name": "folder walk when the folder cannot be watched",
+      "group": "sync",
+      "value": 300,
+      "unit": "s",
+      "estimated": true
+    },
+    {
+      "name": "navigation width",
+      "group": "layout",
+      "value": 272,
+      "unit": "px",
+      "source": "home_dialog.css .saqWhd grid-template-columns:272px"
+    },
+    {
+      "name": "top bar height",
+      "group": "layout",
+      "value": 64,
+      "unit": "px",
+      "source": "home_dialog.css .gUWKnc height:64px"
+    },
+    {
+      "name": "primary colour",
+      "group": "layout",
+      "value": "#0b57d0",
+      "source": "home_dialog.css --gm3-sys-color-primary"
+    },
+    {
+      "name": "nav and top bar colour",
+      "group": "layout",
+      "value": "#f0f4f9",
+      "source": "home_dialog.css --gm3-sys-color-surface-container"
+    },
+    {
+      "name": "selected nav item colour",
+      "group": "layout",
+      "value": "#c2e7ff",
+      "source": "home_dialog.css --gm3-sys-color-secondary-container"
+    },
+    {
+      "name": "default language",
+      "group": "ui",
+      "value": "English",
+      "source": "person's request"
+    },
+    {
+      "name": "nav items",
+      "group": "ui",
+      "value": "Home, Sync activity, Notifications, Connected folders, Offline files, Shared with me, Settings",
+      "source": "home_dialog__en_gb.js nav builders (order by code position)"
+    },
+    {
+      "name": "pause reason",
+      "group": "sync",
+      "value": "user-paused",
+      "source": "function 0x100306dc0 (SetSyncingPaused)"
+    },
+    {
+      "name": "pause survives restart",
+      "group": "sync",
+      "value": true,
+      "source": "function 0x100306dc0 / 0x1005d5cb0"
+    },
+    {
+      "name": "mirror polls right after resume",
+      "group": "sync",
+      "value": true,
+      "source": "function 0x100ae99e0"
+    },
+    {
+      "name": "streaming folder name",
+      "group": "sync",
+      "value": "GoogleDrive-<account>",
+      "source": "string 0x1040700fe in function 0x1000518e0"
+    },
+    {
+      "name": "streaming attach attempts",
+      "group": "sync",
+      "value": 10,
+      "source": "function 0x1000518e0"
+    },
+    {
+      "name": "streaming attach retry delay",
+      "group": "sync",
+      "value": 2,
+      "unit": "s",
+      "source": "function 0x1000518e0"
+    },
+    {
+      "name": "cache use percent",
+      "group": "cache",
+      "value": "used*100/capacity (rounded down)",
+      "source": "function 0x100e65c20"
+    },
+    {
+      "name": "cache capacity unit internally",
+      "group": "cache",
+      "value": "bytes (logged as MB)",
+      "source": "function 0x100dffce0"
+    },
+    {
+      "name": "browser sign-in timeout",
+      "group": "account",
+      "value": 300,
+      "unit": "s",
+      "source": "flag default browser_auth_wait_for_client_timeout_ms @0x103f52044"
+    },
+    {
+      "name": "photo extensions",
+      "group": "photos",
+      "value": "jpg,jpeg,jpe,png,gif,heif,heic,tif,tiff,webp,bmp,dib,ico,jp2,j2c,jpf,j2k,jpx",
+      "source": "function 0x1009c22f0 (flag 45371132)"
+    },
+    {
+      "name": "raw photo extensions",
+      "group": "photos",
+      "value": "dng,raw,arw,crw,cr2,cr3,dcr,dc2,erf,kc2,kdc,k25,mdc,mef,mos,mrw,nef,nrw,orf,pef,qtk,raf,rdc,rw2,srf,srw,sr2,x3f,3fr",
+      "source": "string 0x1040a2983, function 0x1009c22f0"
+    },
+    {
+      "name": "upload RAW files default",
+      "group": "photos",
+      "value": false,
+      "source": "photos_upload_raw_files @0x103f77acc (bool, no default)"
+    },
+    {
+      "name": "video extensions",
+      "group": "photos",
+      "value": "3g2,3gp,asf,avi,divx,flv,m2t,m2ts,m4v,mkv,mmv,mng,mod,mov,mp4,mpe,mpg,mpeg,mts,ogv,qt,tod,webm,wmv",
+      "source": "function 0x1009c22f0 (flag 45371155)"
+    },
+    {
+      "name": "ignored file name patterns",
+      "group": "sync",
+      "value": 11,
+      "source": "function 0x1013684a0"
+    },
+    {
+      "name": "streaming folder may contain only hidden entries",
+      "group": "sync",
+      "value": true,
+      "source": "function 0x10152f980"
+    },
+    {
+      "name": "deleted Drive files kept in trash",
+      "group": "sync",
+      "value": 30,
+      "unit": "days",
+      "source": "original string \"Items will be permanently deleted after 30 days\""
+    },
+    {
+      "name": "synced folder may overlap Drive folder",
+      "group": "sync",
+      "value": false,
+      "source": "original string \"The folder cannot be within {MOUNT_POINT} which is being used by {EMAIL}\""
+    },
+    {
+      "name": "mirror conflict rule",
+      "group": "sync",
+      "value": "Drive version kept in place, computer version moved to Lost and Found",
+      "source": "functions 0x100bfc6a0 (MoveNewFileIntoPlace) and 0x100671870 (DeconflictCopy)"
+    },
+    {
+      "name": "conflict message",
+      "group": "sync",
+      "value": "Can’t sync file, moved it to “Lost and Found” folder.",
+      "source": "English string table (with Vietnamese \"Bị thất lạc và đã tìm thấy\")"
+    },
+    {
+      "name": "same Drive folder for two accounts",
+      "group": "account",
+      "value": false,
+      "source": "function 0x10139f100"
+    },
+    {
+      "name": "prompt to back up devices default",
+      "group": "devices",
+      "value": true,
+      "source": "original setting \"Prompt me to back up devices\" (default on, estimated from it being a notification preference)"
+    },
+    {
+      "name": "max accounts",
+      "group": "account",
+      "value": 4,
+      "source": "flag default multi_account_max_accounts @0x103f529e6"
+    },
+    {
+      "name": "Drive change poll",
+      "group": "sync",
+      "value": 10000,
+      "unit": "ms",
+      "source": "flag default changelog_polling_interval_ms @0x103f4b64e"
+    },
+    {
+      "name": "local change upload delay",
+      "group": "sync",
+      "value": 0,
+      "unit": "ms",
+      "source": "flag default upload_idle_delay_msec @0x103f7b250"
+    },
+    {
+      "name": "NAS reconnect poll",
+      "group": "sync",
+      "value": 60,
+      "unit": "s",
+      "source": "flag default reconnected_nas_polling_interval_seconds @0x103f528f1"
+    },
+    {
+      "name": "NAS backup interval",
+      "group": "sync",
+      "value": 6,
+      "unit": "hours",
+      "source": "original string \"Network-attached storage backed up every 6 hours\""
+    },
+    {
+      "name": "min free space for writes",
+      "group": "cache",
+      "value": 512000,
+      "unit": "KiB",
+      "source": "flag default min_free_space_for_writes_kbytes @0x103f79dcd"
+    },
+    {
+      "name": "search list refresh",
+      "group": "ui",
+      "value": 300,
+      "unit": "s",
+      "source": "flag default file_provider_string_search_expiration_time_ms @0x103f4ff6b"
+    },
+    {
+      "name": "built-in cache ceiling",
+      "group": "cache",
+      "value": 1000000000,
+      "unit": "KiB",
+      "source": "flag default content_cache_max_kbytes @0x103f4ba71"
+    },
+    {
+      "name": "profile picture size",
+      "group": "account",
+      "value": 256,
+      "unit": "px",
+      "source": "function 0x1003d5d60 (\"=s256-c\")"
+    },
+    {
+      "name": "profile picture options dropped",
+      "group": "account",
+      "value": "c,h,s,w",
+      "source": "function 0x1003d5d60 (mask 0x110021)"
+    },
+    {
+      "name": "activity list length",
+      "group": "ui",
+      "value": 50,
+      "source": "flag default item_events_buffer_size @0x103f49eed"
+    },
+    {
+      "name": "confirm quit during system logout",
+      "group": "general",
+      "value": false,
+      "source": "flag default confirm_quit_during_system_logout @0x103f5321b"
+    },
+    {
+      "name": "hide notification type",
+      "group": "ui",
+      "value": "per type and account",
+      "source": "function 0x1009435b0 (notifications table)"
+    },
+    {
+      "name": "quit waits for pending uploads",
+      "group": "general",
+      "value": true,
+      "source": "functions 0x1003070c0 (RequestPushChangesAndQuit) and 0x100312a10 (MaybePerformSafeQuit)"
+    },
+    {
+      "name": "close keeps running in tray",
+      "group": "general",
+      "value": true,
+      "source": "original menu-bar behaviour; person asked for it"
+    },
+    {
+      "name": "last event time kept per item",
+      "group": "ui",
+      "value": true,
+      "source": "function 0x100849940 (RecordItemEvent, last_item_event_time table)"
+    },
+    {
+      "name": "events for missing items",
+      "group": "ui",
+      "value": "ignored",
+      "source": "function 0x100849940"
+    },
+    {
+      "name": "device identity",
+      "group": "devices",
+      "value": "media_id (filesystem UUID)",
+      "source": "media table; function 0x10093f270"
+    },
+    {
+      "name": "single instance lock",
+      "group": "general",
+      "value": "flock(LOCK_EX|LOCK_NB) on a lock file",
+      "source": "function 0x1001c76a0"
+    },
+    {
+      "name": "photos upload retries",
+      "group": "photos",
+      "value": 3,
+      "source": "flag default photos_max_upload_retries_offline @0x103f4cd76"
+    },
+    {
+      "name": "copied link",
+      "group": "files",
+      "value": "item webViewLink (alternate_link)",
+      "source": "function 0x100580500 (CopyToClipboard) + alternate_link field"
+    },
+    {
+      "name": "max shared drives to sync",
+      "group": "sync",
+      "value": 0,
+      "unit": "0 = no limit",
+      "source": "flag default max_shared_drives_to_sync @0x103f4eef2"
+    },
+    {
+      "name": "shared drive list refresh",
+      "group": "sync",
+      "value": "at start, then on change-list drive changes; safety re-read every 11111000 ms",
+      "source": "flag defaults fetch_shared_drive_roots_on_init = true @0x103f7bbf5 and changelog_backup_poll_interval_ms @0x103f4bf79; ProcessSharedDriveChanges 0x1017c53b0 (no refresh timer flag exists)"
+    },
+    {
+      "name": "ransomware alert kept across restarts",
+      "group": "ransomware",
+      "value": true,
+      "source": "\"ransomware-alert\" sentinel (string 0x104081724), function 0x1002e0ea0; has_ransomware_alert @0x103f622ca"
+    },
+    {
+      "name": "earlier clear wins within",
+      "group": "ransomware",
+      "value": 3600,
+      "unit": "s",
+      "source": "function 0x1002e0ea0 (0xe10, ExistingRansomwareClearTakesPrecedence)"
+    },
+    {
+      "name": "sign-out ends the ransomware alert",
+      "group": "ransomware",
+      "value": true,
+      "source": "symbol HandleRansomwareAlertOnSignOut"
+    },
+    {
+      "name": "Drive keeps old versions for restore",
+      "group": "ransomware",
+      "value": 25,
+      "unit": "days",
+      "source": "home_dialog__en_gb.js ransomware dialog"
+    },
+    {
+      "name": "ransomware notification",
+      "group": "ransomware",
+      "value": "Syncing paused: Ransomware detected on {0}",
+      "source": "English string table"
+    },
+    {
+      "name": "ransomware minimum files",
+      "group": "ransomware",
+      "value": 50,
+      "estimated": true
+    },
+    {
+      "name": "ransomware minimum share of folder",
+      "group": "ransomware",
+      "value": 10,
+      "unit": "%",
+      "estimated": true
+    },
+    {
+      "name": "ransomware files that always count",
+      "group": "ransomware",
+      "value": 500,
+      "estimated": true
+    },
+    {
+      "name": "diagnostic file name",
+      "group": "diagnostics",
+      "value": "Google Drive Diagnostics - %Y-%m-%dT%H.%M.%E2S%Ez.zip",
+      "source": "function 0x10094ba20"
+    },
+    {
+      "name": "diagnostic name attempts",
+      "group": "diagnostics",
+      "value": 16,
+      "source": "function 0x10094ba20"
+    },
+    {
+      "name": "diagnostic name retry step",
+      "group": "diagnostics",
+      "value": 40,
+      "unit": "ms",
+      "source": "function 0x10094ba20 (40000000 ns)"
+    },
+    {
+      "name": "diagnostic file placed on",
+      "group": "diagnostics",
+      "value": "desktop",
+      "source": "function 0x10094ba20 (MaybeMoveDiagnosticFileToDesktop)"
+    },
+    {
+      "name": "diagnostics run on one thread",
+      "group": "diagnostics",
+      "value": true,
+      "source": "function 0x100512ce0 (diagnostic_info_generator_thread)"
+    },
+    {
+      "name": "log file size limit",
+      "group": "diagnostics",
+      "value": 5120,
+      "unit": "KiB",
+      "source": "flag default structured_log_max_file_size_kbytes @0x103f52384"
+    },
+    {
+      "name": "log files kept",
+      "group": "diagnostics",
+      "value": 30,
+      "source": "flag default structured_log_max_file_count @0x103f523d0"
+    },
+    {
+      "name": "verbose logging default",
+      "group": "diagnostics",
+      "value": false,
+      "source": "menu shows 'Enable verbose logging' (string table)"
+    },
+    {
+      "name": "badge identifiers",
+      "group": "badges",
+      "value": "pinned, cloud, mirror_root, synced, syncing, blacklisted, cse",
+      "source": "FinderSyncExtension strings 0x101510aa1 (CFStrings 0x10154adc8-0x10154ae88)"
+    },
+    {
+      "name": "mirror status 1 badge",
+      "group": "badges",
+      "value": "synced",
+      "source": "-[DFSFinderSync setMirrorSyncStatusOverlay:] 0x100021ab0"
+    },
+    {
+      "name": "mirror status 2 badge",
+      "group": "badges",
+      "value": "syncing",
+      "source": "-[DFSFinderSync setMirrorSyncStatusOverlay:] 0x100021ab0"
+    },
+    {
+      "name": "mirror status 3 badge",
+      "group": "badges",
+      "value": "blacklisted",
+      "source": "-[DFSFinderSync setMirrorSyncStatusOverlay:] 0x100021ab0"
+    },
+    {
+      "name": "streamed item badge",
+      "group": "badges",
+      "value": "pinned when available offline, else cloud",
+      "source": "-[DFSFinderSync requestBadgeIdentifierForURL:] 0x10001be80"
+    },
+    {
+      "name": "badge change check",
+      "group": "badges",
+      "value": 1500,
+      "unit": "ms",
+      "estimated": true
+    },
+    {
+      "name": "badge listener retry delay",
+      "group": "badges",
+      "value": 5000,
+      "unit": "ms",
+      "source": "FinderSyncExtension FUN_1000244d0 (dispatch_time 5000000000 ns)"
+    },
+    {
+      "name": "badge listener retries",
+      "group": "badges",
+      "value": 6,
+      "source": "FinderSyncExtension FUN_1000244d0 (_registerPprogressListenerRetryCount < 6), FUN_100024b30"
+    },
+    {
+      "name": "badges cleared when the app link is lost",
+      "group": "badges",
+      "value": true,
+      "source": "FinderSyncExtension FUN_1000244d0 (unpublish each resourceProgress)"
+    },
+    {
+      "name": "check for a newer copy of the app",
+      "group": "general",
+      "value": 30,
+      "unit": "s",
+      "estimated": true
+    },
+    {
+      "name": "cache and bandwidth field upper limit",
+      "group": "cache",
+      "value": 100000000,
+      "source": "function 0x1002ce650 (UPPER_LIMIT from 0x103ade640 and 0x103ade644, both 0x05f5e100)"
+    },
+    {
+      "name": "shortcut must be inside the Drive folder",
+      "group": "files",
+      "value": true,
+      "source": "function 0x10036aae0 (mount point prefix check)"
+    },
+    {
+      "name": "shortcut name when a folder is picked",
+      "group": "files",
+      "value": "the shared item's name",
+      "source": "function 0x10036aae0"
+    },
+    {
+      "name": "shortcut targets refused",
+      "group": "files",
+      "value": "empty target, shared drive roots, trashed items",
+      "source": "strings 0x10412bc4e, 0x10411dc03, 0x10411dc54"
+    },
+    {
+      "name": "offline items check interval",
+      "group": "sync",
+      "value": 300000,
+      "unit": "ms",
+      "source": "flag default subscription_task_throttle_time_ms @0x103f4d005; FUN_101761b10 (subscription_task.cc)"
+    },
+    {
+      "name": "offline items per check",
+      "group": "sync",
+      "value": 50,
+      "source": "flag default subscription_task_max_operations @0x103f4d046; FUN_101761b10 (\"Too many items to re-subscribe, trimmed to\")"
+    },
+    {
+      "name": "offline item retry interval",
+      "group": "sync",
+      "value": 14400000,
+      "unit": "ms",
+      "source": "flag default resubscribe_retry_interval_msec @0x103f4c219"
+    },
+    {
+      "name": "badge asked again after no answer",
+      "group": "badges",
+      "value": 2000,
+      "unit": "ms",
+      "estimated": true
+    },
+    {
+      "name": "badge items remembered for updates",
+      "group": "badges",
+      "value": 5000,
+      "estimated": true
+    },
+    {
+      "name": "mirror backup poll",
+      "group": "sync",
+      "value": 11111000,
+      "unit": "ms",
+      "source": "flag default changelog_backup_poll_interval_ms (int64 field 61) @0x103f4bf79; fixed-period PeriodicPoller built in function 0x100ab30e0 (periodic_poller.cc constructor 0x100ab3480)"
+    },
+    {
+      "name": "change list back-off after failures",
+      "group": "sync",
+      "value": "2× then 4× the 10000 ms period (20 s, 40 s)",
+      "source": "function 0x100ab32a0 (PeriodicPoller from changelog_polling_interval_ms, int32 field 7, with period×2 and period×4)"
+    },
+    {
+      "name": "notifications card max height",
+      "group": "layout",
+      "value": 370,
+      "unit": "px",
+      "source": "home_dialog.css .QNY0bf max-height:370px"
+    },
+    {
+      "name": "notification row height",
+      "group": "layout",
+      "value": 77,
+      "unit": "px",
+      "source": "home_dialog.css .HapGeb --gm3-data-table-row-item-container-height:77px"
+    },
+    {
+      "name": "folder walk interval",
+      "group": "sync",
+      "value": 240,
+      "unit": "min",
+      "source": "flag default slurp_poll_path_frequency_min @0x103f52a1d; SlurpSyncRoot::PollPath FUN_10015a020 (slurp_sync_root.cc) → FSMedia::PollPath 0x10013a470 / PollPathRepeatedly 0x10013b780 (fs_media.cc)"
+    },
+    {
+      "name": "photos settle time before backup",
+      "group": "folders",
+      "value": 300,
+      "unit": "s",
+      "source": "photos_debounce_edit_time_ms default 300000 (0x103f4cdee); debouncer FUN_100c7fbe0 / FUN_100c804f0 ScheduleAction (debouncer.cc)"
+    }
+  ]
+}

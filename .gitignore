@@ -1,0 +1,22 @@
+# Build output
+/target/
+/dist/
+**/*.rs.bk
+
+# Local screenshots and scratch files
+/shots/
+*.tmp
+*.orig
+*.rej
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Packages built locally
+*.deb
+*.rpm
+*.pkg.tar.zst

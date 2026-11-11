@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Drive For Linux
+GenericName=Cloud file sync
+GenericName[vi]=Đồng bộ tệp trên đám mây
+Comment=Sync your Google Drive files on Linux
+Comment[vi]=Đồng bộ tệp Google Drive trên Linux
+Icon=/usr/share/icons/hicolor/scalable/apps/drivelinux.svg
+Exec=drive-linux
+Terminal=false
+Categories=Network;FileTransfer;
+StartupWMClass=drive-linux
+Keywords=drive;cloud;sync;backup;
