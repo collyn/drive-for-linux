@@ -20,6 +20,19 @@ use eframe::egui;
 /// The name people see (window, tray, notifications, menus). Internal names (the program file
 /// `drive-linux`, the config folder) stay as they were so settings carry over.
 pub const APP_NAME: &str = "Drive For Linux";
+
+/// The version number: the release tag's when the GitHub workflow builds a release (it sets
+/// APP_VERSION), Cargo.toml's otherwise.
+pub const VERSION: &str = match option_env!("APP_VERSION") {
+    Some(v) if !v.is_empty() => v,
+    _ => env!("CARGO_PKG_VERSION"),
+};
+
+/// The version as the original shows it: the number, then the processor in brackets
+/// ("133.0.2.0 (Intel)", built by function 0x101581e80 from "133.0.2.0", " (", "Intel", ")").
+pub fn version_text() -> String {
+    format!("{VERSION} ({})", std::env::consts::ARCH)
+}
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::Mutex;
 
@@ -101,6 +114,12 @@ fn main() -> eframe::Result<()> {
     if let Some(file) = args.iter().position(|a| a == "--open-doc").and_then(|i| args.get(i + 1)) {
         let ok = gdocs::open(std::path::Path::new(file));
         std::process::exit(if ok { 0 } else { 1 });
+    }
+    // Started at login (--startup, from the autostart entry): quit at once when "Launch on
+    // login" is off, as the original's startup_mode flag does ("Run file stream in startup mode,
+    // which immediately quits if autostart on login is not enabled.", @0x103cea77e).
+    if args.iter().any(|a| a == "--startup") && !settings::Settings::load().autostart {
+        return Ok(());
     }
     let screenshot = args.iter().position(|a| a == "--screenshot").and_then(|i| args.get(i + 1)).map(std::path::PathBuf::from);
     let action = args.iter().position(|a| a == "--action").and_then(|i| Some((args.get(i + 1)?.clone(), args.get(i + 2)?.clone())));

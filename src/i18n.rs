@@ -72,6 +72,7 @@ fn table() -> &'static HashMap<&'static str, &'static str> {
             ("Help", "Trợ giúp"),
             ("Send feedback", "Gửi ý kiến phản hồi"),
             ("About", "Giới thiệu"),
+            ("Version", "Phiên bản"),
             ("Quit", "Thoát"),
             ("Quit Google Drive", "Thoát Google Drive"),
             ("Disconnect account", "Ngắt kết nối tài khoản"),

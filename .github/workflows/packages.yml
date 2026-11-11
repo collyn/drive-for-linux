@@ -3,12 +3,13 @@ name: Build packages
 on:
   push:
     branches: [main, master]
-    tags: ["v*"]
+    # A version tag builds the packages and publishes them as a GitHub release: 0.1.0 or v0.1.0.
+    tags: ["[0-9]+.[0-9]+.[0-9]+*", "v[0-9]+.[0-9]+.[0-9]+*"]
   pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: write # to attach the packages to a release when a v* tag is pushed
+  contents: write # to publish the packages as a release when a version tag is pushed
 
 jobs:
   packages:
@@ -24,14 +25,14 @@ jobs:
             ca-certificates curl git build-essential pkg-config \
             qt6-base-dev qt6-base-dev-tools libkf6kiocore6 libxkbcommon-dev
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --component clippy,rustfmt
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -51,19 +52,27 @@ jobs:
 
       - name: Build packages
         run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then export VERSION="${GITHUB_REF_NAME#v}"; fi
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            # The tag is the version: packages are named after it and the app shows it in About.
+            export VERSION="${GITHUB_REF_NAME#v}"
+            export APP_VERSION="$VERSION"
+          fi
           export HOMEPAGE="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
           ./packaging/build-packages.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: drive-for-linux-packages
           path: dist/*
           if-no-files-found: error
 
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
         with:
+          name: Drive For Linux ${{ github.ref_name }}
           files: dist/*
           generate_release_notes: true
+          # Tags such as 0.2.0-beta.1 are published as pre-releases.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: true

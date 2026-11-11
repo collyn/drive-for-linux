@@ -7,6 +7,8 @@ cd "$(dirname "$0")/.."
 NFPM_VERSION="${NFPM_VERSION:-2.43.0}"
 VERSION="${VERSION:-$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)}"
 export VERSION
+# The app shows the same version as its packages (see VERSION in src/main.rs).
+export APP_VERSION="${APP_VERSION:-$VERSION}"
 export HOMEPAGE="${HOMEPAGE:-https://github.com/}"
 
 cargo build --release --locked

@@ -44,7 +44,9 @@
 ## Cài đặt
 
 Gói cài sẵn được GitHub Actions dựng sau mỗi lần đẩy mã (tải ở mục *Artifacts* của lần chạy) và
-được đính kèm vào bản phát hành mỗi khi đẩy một thẻ `v*`:
+khi đẩy một thẻ phiên bản như `0.1.0` (dạng `v0.1.0` cũng được) thì GitHub tự dựng và tạo bản phát
+hành kèm các gói; thẻ có dấu gạch ngang như `0.2.0-beta.1` là bản thử nghiệm. Thẻ cũng là phiên bản
+app hiển thị trong mục Giới thiệu ("Phiên bản: 0.1.0 (x86_64)"):
 
 | Hệ điều hành | Gói | Lệnh cài |
 |---|---|---|

@@ -159,7 +159,7 @@ fn collect(rclone: &str) -> Vec<(String, Vec<u8>)> {
     let env = |k: &str| std::env::var(k).unwrap_or_default();
     let about = format!(
         "Drive For Linux {}\nrclone: {}\nsystem: {}desktop: {} ({})\nverbose logging: {}\n",
-        env!("CARGO_PKG_VERSION"),
+        crate::version_text(),
         run(rclone, &["version"]).lines().next().unwrap_or(""),
         run("uname", &["-a"]),
         env("XDG_CURRENT_DESKTOP"),

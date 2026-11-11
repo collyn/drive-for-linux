@@ -44,7 +44,9 @@
 ## Install
 
 Ready-made packages are built by GitHub Actions for every push (download them from the run's
-*Artifacts*) and attached to each release when a `v*` tag is pushed:
+*Artifacts*). Pushing a version tag such as `0.1.0` (or `v0.1.0`) builds them and publishes a
+GitHub release with them attached; a tag with a dash, such as `0.2.0-beta.1`, becomes a
+pre-release. The tag is also the version the app shows in About ("Version: 0.1.0 (x86_64)"):
 
 | System | Package | Install with |
 |---|---|---|

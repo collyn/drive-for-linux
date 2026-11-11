@@ -437,7 +437,7 @@ pub fn set_autostart(on: bool) {
         let exe = std::env::current_exe().map(|p| p.to_string_lossy().to_string()).unwrap_or_else(|_| "drive-linux".into());
         let _ = std::fs::create_dir_all(&dir);
         let icon = icon_path().to_string_lossy().to_string();
-        let body = format!("[Desktop Entry]\nType=Application\nName=Drive For Linux\nIcon={icon}\nExec=\"{exe}\" --background\nX-GNOME-Autostart-enabled=true\n");
+        let body = format!("[Desktop Entry]\nType=Application\nName=Drive For Linux\nIcon={icon}\nExec=\"{exe}\" --background --startup\nX-GNOME-Autostart-enabled=true\n");
         let _ = std::fs::write(file, body);
     } else {
         let _ = std::fs::remove_file(file);

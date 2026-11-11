@@ -93,9 +93,12 @@ impl DriveApp {
         let (d, u, c) = (st.download_kbps.to_string(), st.upload_kbps.to_string(), st.cache_limit_gb.to_string());
         if screenshot.is_none() {
             install_launcher();
-            if st.autostart {
-                set_autostart(true);
-            }
+            // Like the original's MaybeRegisterForAutoLaunch (client.cc, in function 0x10031f830):
+            // on every start the login entry is made to match the setting, for this copy's own
+            // location ("Enabled auto-launch" / "Disabled auto-launch"), so an entry left by a
+            // copy that was moved or deleted is replaced or removed.
+            set_autostart(st.autostart);
+            crate::diag::log_event("info", &format!("Auto-launch: {}", if st.autostart { "enabled" } else { "disabled" }));
         }
         let pal = if st.dark { DARK } else { LIGHT };
         let paused = st.paused;
@@ -1712,7 +1715,7 @@ impl DriveApp {
                     ui.add(theme::logo(40.0));
                     ui.label(RichText::new(crate::APP_NAME).size(20.0));
                 });
-                ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
+                ui.label(format!("{}: {}", tr("Version"), crate::version_text()));
                 ui.label(RichText::new(tr("Independent Linux app. Connects to Google Drive through rclone; not made by Google.")).color(p.on_variant));
                 ui.add_space(8.0);
                 egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| compat_list(ui, &p));
