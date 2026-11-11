@@ -73,6 +73,8 @@ fn table() -> &'static HashMap<&'static str, &'static str> {
             ("Send feedback", "Gửi ý kiến phản hồi"),
             ("About", "Giới thiệu"),
             ("Version", "Phiên bản"),
+            ("A newer version of Drive For Linux is available", "Đã có phiên bản mới hơn của Drive For Linux"),
+            ("Please update to a newer version.", "Vui lòng cập nhật lên phiên bản mới hơn."),
             ("Quit", "Thoát"),
             ("Quit Google Drive", "Thoát Google Drive"),
             ("Disconnect account", "Ngắt kết nối tài khoản"),

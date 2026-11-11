@@ -14,6 +14,7 @@ mod ransom;
 mod settings;
 mod theme;
 mod tray;
+mod update;
 
 use eframe::egui;
 

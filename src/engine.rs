@@ -300,6 +300,10 @@ impl Engine {
             pin_last: Arc::default(),
         };
         std::thread::spawn(move || w.run(rx));
+        if run {
+            // Once at start, like the original's NotifyIfDeprecated (see update.rs).
+            crate::update::spawn_check(shared.clone());
+        }
         Self { shared, settings, job, connect_child, tx, ctx }
     }
 

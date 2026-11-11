@@ -10,6 +10,8 @@ export VERSION
 # The app shows the same version as its packages (see VERSION in src/main.rs).
 export APP_VERSION="${APP_VERSION:-$VERSION}"
 export HOMEPAGE="${HOMEPAGE:-https://github.com/}"
+# Release builds check this project's GitHub releases for a newer version once at start (src/update.rs).
+export APP_HOMEPAGE="${APP_HOMEPAGE:-$HOMEPAGE}"
 
 cargo build --release --locked
 # The Dolphin badge plugin must have been built in (needs g++, Qt 6 and KF6 KIO).
