@@ -2094,11 +2094,16 @@ fn changes_poll_delay(failures: u32) -> Duration {
     }
 }
 
-/// Google's answers when it refuses requests for coming too fast; the original recognises the same
-/// two reasons (strings "rateLimitExceeded" / "userRateLimitExceeded" @0x104147ba3 / 0x104147cb6).
+/// Google's answers when it refuses requests for coming too fast. The original's reason table
+/// (0x104353c18, read by function 0x1022b1b30, absl_status_utils.cc) gives "rateLimitExceeded" and
+/// "userRateLimitExceeded" the same error, 350, which function 0x1022b2ce0 turns into a temporary
+/// failure (UNAVAILABLE) and the cloud store (0x101818e10, OnClosureComplete) retries with the
+/// task's back-off. "quotaExceeded" is a different error (31, RESOURCE_EXHAUSTED) — a full Drive
+/// or a file downloaded too often ("quota.download" → 235) — and is not waited out like this.
+/// HTTP 429 "Too Many Requests" is counted here too (inferred: the same kind of refusal).
 fn is_rate_limited(err: &str) -> bool {
     let e = err.to_ascii_lowercase();
-    e.contains("ratelimitexceeded") || e.contains("rate limit exceeded") || e.contains("quota exceeded") || e.contains("too many requests")
+    e.contains("ratelimitexceeded") || e.contains("rate limit exceeded") || e.contains("too many requests")
 }
 
 /// Wait before the next try after `tries` refusals in a row: the original's fetch-task back-off,
@@ -2336,6 +2341,9 @@ mod pin_tests {
         assert_eq!(rate_limit_delay(40), Duration::from_secs(600));
         assert!(is_rate_limited("googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded"));
         assert!(is_rate_limited("userRateLimitExceeded") && !is_rate_limited("directory not found"));
+        // A full Drive or a download quota isn't a rate limit (the original's error 31 / 235).
+        assert!(!is_rate_limited("googleapi: Error 403: The user's Drive storage quota has been exceeded., storageQuotaExceeded"));
+        assert!(!is_rate_limited("googleapi: Error 403: The download quota for this file has been exceeded., downloadQuotaExceeded"));
     }
 
     #[test]
