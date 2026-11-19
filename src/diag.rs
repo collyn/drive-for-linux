@@ -175,7 +175,16 @@ fn collect(rclone: &str) -> Vec<(String, Vec<u8>)> {
         for p in names {
             let name = p.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
             if name == "settings.json" || name == "history.json" || name.starts_with("ransomware-") {
-                if let Ok(b) = std::fs::read(&p) {
+                if let Ok(mut b) = std::fs::read(&p) {
+                    // The own Google app key's secret never goes into the report.
+                    if name == "settings.json" {
+                        if let Ok(mut v) = serde_json::from_slice::<serde_json::Value>(&b) {
+                            if v["google_client_secret"].as_str().is_some_and(|s| !s.is_empty()) {
+                                v["google_client_secret"] = "(hidden)".into();
+                            }
+                            b = serde_json::to_vec_pretty(&v).unwrap_or_default();
+                        }
+                    }
                     e.push((format!("config/{name}"), b));
                 }
             } else if name.starts_with("mirror-state") && name.ends_with(".json") {

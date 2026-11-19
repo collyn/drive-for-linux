@@ -37,6 +37,8 @@ pub struct DriveApp {
     down_text: String,
     up_text: String,
     cache_text: String,
+    key_id_text: String,
+    key_secret_text: String,
     needs_restart: bool,
     confirm_disconnect: Option<String>,
     show_about: bool,
@@ -72,6 +74,7 @@ struct Snap {
     checked: bool,
     connecting: bool,
     connecting_photos: bool,
+    rate_limit_hint: bool,
     job: Option<String>,
     pending: u64,
     transfers: usize,
@@ -91,6 +94,7 @@ impl DriveApp {
         set_vietnamese(st.language == "vi");
         PROXY_DIRECT.store(st.proxy_direct, std::sync::atomic::Ordering::Relaxed);
         let (d, u, c) = (st.download_kbps.to_string(), st.upload_kbps.to_string(), st.cache_limit_gb.to_string());
+        let (key_id, key_secret) = (st.google_client_id.clone(), st.google_client_secret.clone());
         if screenshot.is_none() {
             install_launcher();
             // Like the original's MaybeRegisterForAutoLaunch (client.cc, in function 0x10031f830):
@@ -171,6 +175,8 @@ impl DriveApp {
             down_text: d,
             up_text: u,
             cache_text: c,
+            key_id_text: key_id,
+            key_secret_text: key_secret,
             needs_restart: false,
             confirm_disconnect: None,
             show_about: false,
@@ -211,6 +217,7 @@ impl DriveApp {
             checked: sh.checked_account,
             connecting: sh.connecting,
             connecting_photos: sh.connecting_photos,
+            rate_limit_hint: sh.rate_limit_hint,
             job: sh.job.clone(),
             pending: sh.pending,
             transfers: sh.transfers.len(),
@@ -1332,6 +1339,39 @@ impl DriveApp {
                 self.update_settings(|s| s.proxy_direct = direct);
                 PROXY_DIRECT.store(direct, std::sync::atomic::Ordering::Relaxed);
                 self.needs_restart = true;
+            }
+        });
+        bento(ui, &p, |ui| {
+            setting_title(ui, tr("Your own Google app key (optional)"));
+            if s.rate_limit_hint && st.google_key().is_none() {
+                ui.label(RichText::new(tr("Google Drive is refusing requests made with the shared key (“rateLimitExceeded”). Your own key has its own limit.")).color(p.primary));
+            }
+            ui.label(RichText::new(tr("Without one, Drive is reached with rclone’s key, which all rclone users share and which Google often limits. Create a free “Desktop app” OAuth client in Google Cloud Console with the Google Drive API turned on, then paste its client ID and secret here.")).color(p.on_variant));
+            if ui.link(tr("How to make your own key")).clicked() {
+                open("https://rclone.org/drive/#making-your-own-client-id");
+            }
+            ui.add(egui::TextEdit::singleline(&mut self.key_id_text).hint_text(tr("Client ID")).desired_width(f32::INFINITY));
+            ui.add(egui::TextEdit::singleline(&mut self.key_secret_text).hint_text(tr("Client secret")).password(true).desired_width(f32::INFINITY));
+            let (id, secret) = (self.key_id_text.trim().to_string(), self.key_secret_text.trim().to_string());
+            let changed = id != st.google_client_id || secret != st.google_client_secret;
+            let ready = id.is_empty() == secret.is_empty();
+            ui.horizontal(|ui| {
+                let label = if id.is_empty() { tr("Use the shared key") } else { tr("Save and sign in again") };
+                if ui.add_enabled(changed && ready && !s.connecting, filled(label, &p)).clicked() {
+                    self.update_settings(|s| {
+                        s.google_client_id = id.clone();
+                        s.google_client_secret = secret.clone();
+                    });
+                    if !id.is_empty() {
+                        self.engine.send(Cmd::UseOwnKey);
+                    }
+                }
+                if s.connecting {
+                    ui.label(RichText::new(tr("Finish signing in in your browser…")).color(p.on_variant));
+                }
+            });
+            if !id.is_empty() && !changed {
+                ui.label(RichText::new(tr("New accounts are signed in with this key too.")).color(p.on_variant));
             }
         });
         bento(ui, &p, |ui| {

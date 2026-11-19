@@ -227,6 +227,11 @@ pub struct Settings {
     pub language: String,
     pub dark: bool,
     pub proxy_direct: bool,
+    /// The person's own Google app key for Drive (OAuth client ID and secret). Empty: rclone's
+    /// shared key, which Google often refuses with "rateLimitExceeded" because every rclone user
+    /// shares its request limit.
+    pub google_client_id: String,
+    pub google_client_secret: String,
     pub upload_raw: bool,
     pub account_prefs: std::collections::BTreeMap<String, AccountPrefs>,
     pub emails: std::collections::BTreeMap<String, String>,
@@ -279,6 +284,8 @@ impl Default for Settings {
             language: "en".into(),
             dark: false,
             proxy_direct: false,
+            google_client_id: String::new(),
+            google_client_secret: String::new(),
             upload_raw: false, // photos_upload_raw_files (0x103f77acc): bool with no default = off
             account_prefs: Default::default(),
             emails: Default::default(),
@@ -505,6 +512,14 @@ pub fn install_launcher() {
             quiet(std::process::Command::new("xdg-mime").args(["default", "drive-linux-open-doc.desktop", t]));
         }
     });
+}
+
+impl Settings {
+    /// The person's own Google app key, when both parts are filled in.
+    pub fn google_key(&self) -> Option<(String, String)> {
+        let (id, secret) = (self.google_client_id.trim(), self.google_client_secret.trim());
+        (!id.is_empty() && !secret.is_empty()).then(|| (id.to_string(), secret.to_string()))
+    }
 }
 
 pub fn hostname() -> String {

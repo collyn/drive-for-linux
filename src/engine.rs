@@ -83,6 +83,8 @@ pub struct Shared {
     pub history_dirty: bool,
     /// Notification types the person turned off ("Don’t show this again").
     pub hidden_notices: BTreeSet<String>,
+    /// Google refused the shared key's requests: Settings suggests using an own key.
+    pub rate_limit_hint: bool,
     /// Accounts whose syncing is held back because of a ransomware alert.
     pub ransomware: BTreeMap<String, crate::ransom::Alert>,
 }
@@ -200,6 +202,8 @@ pub enum Cmd {
     Connect,
     ConnectPhotos,
     Disconnect(String),
+    /// Sign every Drive account in again with the person's own Google app key.
+    UseOwnKey,
     SyncNow,
     Reconfigure,
     Refresh,
@@ -215,6 +219,9 @@ pub enum Cmd {
 pub const CONNECT_TIMEOUT_SECS: u64 = 300;
 /// Photo upload attempts: photos_max_upload_retries_offline (0x103f4cd76) = 3.
 pub const PHOTOS_UPLOAD_RETRIES: u32 = 3;
+/// See rate_limit_delay.
+pub const FETCH_BACKOFF_START_MS: u64 = 2_000;
+pub const FETCH_BACKOFF_LIMIT_MS: u64 = 600_000;
 /// A photo or video is backed up once it has gone unchanged this long; every change restarts
 /// its wait: photos_debounce_edit_time_ms (0x103f4cdee) = 300000, used by the Photos debouncer
 /// (FUN_100c7fbe0 records each change time, FUN_100c804f0 "ScheduleAction", debouncer.cc,
@@ -249,6 +256,10 @@ fn rclone() -> Command {
     let own = own_rclone_path();
     let mut c = Command::new(if own.is_file() { own.to_string_lossy().to_string() } else { "rclone".into() });
     c.stdin(Stdio::null());
+    // Space Drive requests at least 200 ms apart and wait that long before the first retry
+    // (the original's backoff_start_ms = 200, 0x103f4c7e7; rclone's default is 100 ms), and ride
+    // out longer refusals before giving up.
+    c.env("RCLONE_DRIVE_PACER_MIN_SLEEP", "200ms").env("RCLONE_LOW_LEVEL_RETRIES", "20");
     if PROXY_DIRECT.load(std::sync::atomic::Ordering::Relaxed) {
         for v in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY", "all_proxy"] {
             c.env_remove(v);
@@ -286,6 +297,7 @@ impl Engine {
             tx: tx.clone(),
             runs: BTreeMap::new(),
             next_folder: BTreeMap::new(),
+            rate_limited: BTreeMap::new(),
             photos_settle: BTreeMap::new(),
             next_account: Instant::now(),
             next_pins: Instant::now() + Duration::from_secs(20),
@@ -584,6 +596,9 @@ struct Worker {
     tx: Sender<Cmd>,
     runs: BTreeMap<String, AcctRun>,
     next_folder: BTreeMap<String, Instant>,
+    /// Accounts whose Drive file list was refused for too many requests: how many times in a row,
+    /// and when to try again (the original's fetch-task back-off, see rate_limit_delay).
+    rate_limited: BTreeMap<String, (u32, Instant)>,
     /// Folders backed up to Google Photos with a change still settling: a second pass is due then.
     photos_settle: BTreeMap<String, Instant>,
     next_account: Instant,
@@ -635,6 +650,7 @@ impl Worker {
                 }
                 // Sign-in runs on its own thread so syncing keeps going while the browser is open.
                 Ok(Cmd::Connect) => self.spawn_connect(false),
+                Ok(Cmd::UseOwnKey) => self.spawn_use_own_key(),
                 Ok(Cmd::ConnectPhotos) => self.spawn_connect(true),
                 Ok(Cmd::Refresh) => {
                     self.next_account = Instant::now();
@@ -749,13 +765,17 @@ impl Worker {
                 DriveMode::Stream => self.ensure_mount(&mut run, acc, &st),
                 DriveMode::Mirror => stop_mount(&mut run, &self.shared, acc),
             }
-            if !st.paused && !held && st.drive_mode == DriveMode::Mirror && run.next_mirror.map(|t| Instant::now() >= t).unwrap_or(true) {
+            let limited_until = self.rate_limited.get(acc).map(|(_, t)| *t).filter(|t| Instant::now() < *t);
+            if !st.paused && !held && limited_until.is_none() && st.drive_mode == DriveMode::Mirror && run.next_mirror.map(|t| Instant::now() >= t).unwrap_or(true) {
                 self.mirror(acc, &st);
                 // Local changes come from the watcher and Drive's from the change list, so the full
                 // re-check is only the original's backup poll — unless one of them isn't working.
                 let watched = self.watch_ok && self.watched.contains(&st.mirror_folder);
                 let every = if watched && run.page_token.is_some() && run.changes_failures == 0 { MIRROR_BACKUP_POLL_SECS } else { MIRROR_INTERVAL_SECS };
                 run.next_mirror = Some(Instant::now() + Duration::from_secs(every));
+                if let Some((_, until)) = self.rate_limited.get(acc) {
+                    run.next_mirror = run.next_mirror.map(|t| t.max(*until));
+                }
             }
             self.runs.insert(acc.clone(), run);
         }
@@ -935,7 +955,8 @@ impl Worker {
         self.ctx.request_repaint();
         let (shared, ctx, child_slot, tx, settings) = (self.shared.clone(), self.ctx.clone(), self.connect_child.clone(), self.tx.clone(), self.settings.clone());
         std::thread::spawn(move || {
-            let result = run_sign_in(&name, photos, &child_slot);
+            let key = if photos { None } else { settings.lock().unwrap().google_key() };
+            let result = run_sign_in(&name, photos, key.as_ref(), &child_slot);
             let mut sh = shared.lock().unwrap();
             sh.connecting = false;
             sh.connecting_photos = false;
@@ -958,6 +979,42 @@ impl Worker {
             }
             drop(sh);
             let _ = tx.send(Cmd::Refresh);
+            ctx.request_repaint();
+        });
+    }
+
+    /// Signs each connected Drive account in again (one browser sign-in each) so it uses the
+    /// person's own Google app key instead of rclone's shared one.
+    fn spawn_use_own_key(&mut self) {
+        let Some(key) = self.settings.lock().unwrap().google_key() else { return };
+        let accounts = self.shared.lock().unwrap().accounts.clone();
+        {
+            let mut sh = self.shared.lock().unwrap();
+            if sh.connecting || accounts.is_empty() {
+                return;
+            }
+            sh.connecting = true;
+        }
+        self.ctx.request_repaint();
+        let (shared, ctx, child_slot, tx) = (self.shared.clone(), self.ctx.clone(), self.connect_child.clone(), self.tx.clone());
+        std::thread::spawn(move || {
+            let mut failed = Vec::new();
+            for name in &accounts {
+                if let Err(msg) = run_sign_in(name, false, Some(&key), &child_slot) {
+                    failed.push(format!("{name}: {msg}"));
+                }
+            }
+            let mut sh = shared.lock().unwrap();
+            sh.connecting = false;
+            if failed.is_empty() {
+                sh.rate_limit_hint = false;
+                sh.notify("Success!", "Google Drive now uses your own Google app key.");
+            } else {
+                sh.notify("Sign in Failed", &failed.join("; "));
+            }
+            drop(sh);
+            let _ = tx.send(Cmd::Refresh);
+            let _ = tx.send(Cmd::Reconfigure);
             ctx.request_repaint();
         });
     }
@@ -1358,17 +1415,36 @@ impl Worker {
         let mut docs = Vec::new();
         let sides = list(&folder, &crate::gdocs::exclude_args()).and_then(|b| parse_listing(&b)).and_then(|l| {
             // Every Google document under its own type, also those rclone can't export (Forms, My Maps…).
-            let raw = list(spec, &["--drive-show-all-gdocs".to_string()])?;
+            // --fast-list reads the whole tree in a few large requests instead of one per folder,
+            // which keeps big Drives under Google's request limits.
+            let raw = list(spec, &["--drive-show-all-gdocs".to_string(), "--fast-list".to_string()])?;
             docs = crate::gdocs::parse_docs(&raw);
             parse_listing(&raw).map(|r| (l, r))
         });
         let (local, remote_files) = match sides {
-            Ok(v) => v,
+            Ok(v) => {
+                self.rate_limited.remove(remote);
+                v
+            }
             Err(e) => {
                 // Never treat a failed listing as "everything was deleted".
                 let mut sh = self.shared.lock().unwrap();
                 sh.job = None;
-                sh.notify("Can’t sync folder to Drive", &format!("Mirror files: couldn’t read the file list of “{folder}” ({e}). It will be tried again."));
+                if is_rate_limited(&e) {
+                    let tries = self.rate_limited.get(remote).map(|(n, _)| n + 1).unwrap_or(1);
+                    let wait = rate_limit_delay(tries);
+                    self.rate_limited.insert(remote.to_string(), (tries, Instant::now() + wait));
+                    crate::diag::log_event("warning", &format!("Drive refused the file list ({e}); try {tries}, next in {} s", wait.as_secs()));
+                    let own_key = st.google_key().is_some();
+                    sh.rate_limit_hint = !own_key;
+                    let tip = if own_key { "" } else { " Adding your own Google app key in Settings avoids this." };
+                    sh.notify(
+                        "Google Drive is busy",
+                        &format!("Google Drive is receiving too many requests, so syncing “{folder}” waits a little. It will be tried again in {}.{tip}", crate::theme::human_duration(wait)),
+                    );
+                } else {
+                    sh.notify("Can’t sync folder to Drive", &format!("Mirror files: couldn’t read the file list of “{folder}” ({e}). It will be tried again."));
+                }
                 return false;
             }
         };
@@ -1932,13 +2008,26 @@ pub fn rclone_version() -> String {
 }
 
 /// Runs rclone's browser sign-in, giving up after CONNECT_TIMEOUT_SECS or when cancelled.
-fn run_sign_in(name: &str, photos: bool, slot: &Arc<Mutex<Option<Child>>>) -> Result<(), String> {
+fn run_sign_in(name: &str, photos: bool, key: Option<&(String, String)>, slot: &Arc<Mutex<Option<Child>>>) -> Result<(), String> {
+    let signed_in = has_token(name);
     // A connection left without a sign-in by an earlier attempt is removed first.
-    if !has_token(name) {
+    if !signed_in {
         let _ = rclone().args(["config", "delete", name]).stdout(Stdio::null()).stderr(Stdio::null()).status();
     }
-    let args: &[&str] = if photos { &["google photos", "read_only=false"] } else { &["drive", "scope=drive"] };
-    let mut child = rclone().args(["config", "create", name]).args(args).stdout(Stdio::null()).stderr(Stdio::piped()).spawn().map_err(|e| e.to_string())?;
+    let mut args: Vec<String> = if photos { vec!["google photos".into(), "read_only=false".into()] } else { vec!["drive".into(), "scope=drive".into()] };
+    if let Some((id, secret)) = key {
+        args.push(format!("client_id={id}"));
+        args.push(format!("client_secret={secret}"));
+    }
+    let mut c = rclone();
+    if signed_in && key.is_some() {
+        // Switch an existing connection to the person's key: rclone's "update" signs in again in
+        // the browser (a sign-in made with the shared key can't be refreshed with another key).
+        c.args(["config", "update", name]).args(&args[1..]);
+    } else {
+        c.args(["config", "create", name]).args(&args);
+    }
+    let mut child = c.stdout(Stdio::null()).stderr(Stdio::piped()).spawn().map_err(|e| e.to_string())?;
     let err = child.stderr.take();
     let err_text = Arc::new(Mutex::new(String::new()));
     if let Some(mut e) = err {
@@ -2003,6 +2092,21 @@ fn changes_poll_delay(failures: u32) -> Duration {
         1 => base * 2,
         _ => base * 4,
     }
+}
+
+/// Google's answers when it refuses requests for coming too fast; the original recognises the same
+/// two reasons (strings "rateLimitExceeded" / "userRateLimitExceeded" @0x104147ba3 / 0x104147cb6).
+fn is_rate_limited(err: &str) -> bool {
+    let e = err.to_ascii_lowercase();
+    e.contains("ratelimitexceeded") || e.contains("rate limit exceeded") || e.contains("quota exceeded") || e.contains("too many requests")
+}
+
+/// Wait before the next try after `tries` refusals in a row: the original's fetch-task back-off,
+/// fetch_task_backoff_start_ms = 2000 (0x103f4b863) × fetch_task_backoff_multiplier = 2 (0x103f4b8d3)
+/// per try, at most fetch_task_backoff_limit_ms = 600000 (0x103f4b89a).
+fn rate_limit_delay(tries: u32) -> Duration {
+    let ms = FETCH_BACKOFF_START_MS.saturating_mul(1u64 << tries.saturating_sub(1).min(20));
+    Duration::from_millis(ms.min(FETCH_BACKOFF_LIMIT_MS))
 }
 
 /// Which offline files to read this run: never read first, then the longest ago, skipping those
@@ -2225,6 +2329,13 @@ mod pin_tests {
         assert_eq!(MIRROR_BACKUP_POLL_SECS * 1000, 11_111_000);
         assert_eq!(FOLDER_POLL_SECS, 240 * 60, "slurp_poll_path_frequency_min = 240");
         assert_eq!(PHOTOS_SETTLE_SECS * 1000, 300_000, "photos_debounce_edit_time_ms = 300000");
+        assert_eq!(rate_limit_delay(1), Duration::from_secs(2));
+        assert_eq!(rate_limit_delay(2), Duration::from_secs(4));
+        assert_eq!(rate_limit_delay(9), Duration::from_secs(512));
+        assert_eq!(rate_limit_delay(10), Duration::from_secs(600), "fetch_task_backoff_limit_ms = 600000");
+        assert_eq!(rate_limit_delay(40), Duration::from_secs(600));
+        assert!(is_rate_limited("googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded"));
+        assert!(is_rate_limited("userRateLimitExceeded") && !is_rate_limited("directory not found"));
     }
 
     #[test]

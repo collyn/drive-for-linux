@@ -141,6 +141,17 @@ pub fn app_icon() -> egui::IconData {
     egui::IconData { rgba: logo_rgba(n).unwrap_or_else(|| vec![0; (n * n * 4) as usize]), width: n, height: n }
 }
 
+/// "2 seconds", "4 minutes": for waits shown to the person.
+pub fn human_duration(d: std::time::Duration) -> String {
+    let s = d.as_secs().max(1);
+    match s {
+        1 => "1 second".into(),
+        2..=59 => format!("{s} seconds"),
+        60..=119 => "1 minute".into(),
+        _ => format!("{} minutes", s.div_ceil(60)),
+    }
+}
+
 pub fn human_bytes(b: u64) -> String {
     let units = ["bytes", "KB", "MB", "GB", "TB", "PB"];
     let mut v = b as f64;

@@ -669,6 +669,34 @@
       "value": 300,
       "unit": "s",
       "source": "photos_debounce_edit_time_ms default 300000 (0x103f4cdee); debouncer FUN_100c7fbe0 / FUN_100c804f0 ScheduleAction (debouncer.cc)"
+    },
+    {
+      "name": "refused fetch back-off start",
+      "group": "network",
+      "value": 2000,
+      "unit": "ms",
+      "source": "fetch_task_backoff_start_ms (0x103f4b863)"
+    },
+    {
+      "name": "refused fetch back-off multiplier",
+      "group": "network",
+      "value": 2,
+      "unit": "x",
+      "source": "fetch_task_backoff_multiplier (0x103f4b8d3)"
+    },
+    {
+      "name": "refused fetch back-off limit",
+      "group": "network",
+      "value": 600000,
+      "unit": "ms",
+      "source": "fetch_task_backoff_limit_ms (0x103f4b89a)"
+    },
+    {
+      "name": "request retry start",
+      "group": "network",
+      "value": 200,
+      "unit": "ms",
+      "source": "backoff_start_ms (0x103f4c7e7)"
     }
   ]
 }
