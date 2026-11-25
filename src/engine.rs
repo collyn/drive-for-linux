@@ -125,11 +125,19 @@ impl Shared {
             // Errors saved by earlier versions in rclone's words get the plain wording too.
             for a in &mut self.activity {
                 if let ActState::Error(m) = &mut a.state {
-                    let plain = friendly_error(m);
+                    let plain = if m.starts_with("You don’t have enough disk space to sync some files.") { DISK_FULL.to_string() } else { friendly_error(m) };
                     if plain != *m {
                         *m = plain;
                         self.history_dirty = true;
                     }
+                }
+            }
+            // A "disk full" error no longer applies once the disk has room again.
+            if free_kb(&config_dir().to_string_lossy()).is_some_and(|f| f >= MIN_FREE_KB) {
+                let before = self.activity.len();
+                self.activity.retain(|a| !matches!(&a.state, ActState::Error(m) if m == DISK_FULL));
+                if self.activity.len() != before {
+                    self.history_dirty = true;
                 }
             }
             self.notices = h.notices;
@@ -1746,6 +1754,12 @@ impl Worker {
         sh.pending = 0;
         if ok {
             sh.last_done = Some(SystemTime::now());
+            // A finished run replaces an earlier error shown for the folder itself: it's synced now.
+            let before = sh.activity.len();
+            sh.activity.retain(|a| !(a.name == place && matches!(a.state, ActState::Error(_))));
+            if sh.activity.len() != before {
+                sh.history_dirty = true;
+            }
         } else if !self.settings.lock().unwrap().paused {
             let why = sh.last_error.clone().unwrap_or_else(|| "rclone stopped with an error".into());
             sh.notify("Can’t sync folder to Drive", &format!("{label}: “{place}” didn’t finish ({why}). It will be tried again."));
@@ -1919,12 +1933,14 @@ pub fn desktop_notify(title: &str, body: &str) {
 fn friendly_error(msg: &str) -> String {
     let lower = msg.to_ascii_lowercase();
     if lower.contains("no space left on device") || lower.contains("disk quota exceeded") {
-        let free = free_kb(&config_dir().to_string_lossy()).unwrap_or(0);
-        disk_full_text(free)
+        // No figures here: the row may be read days later, when the disk has room again.
+        DISK_FULL.to_string()
     } else {
         msg.to_string()
     }
 }
+
+const DISK_FULL: &str = "You didn’t have enough disk space to sync some files at the time.";
 
 fn disk_full_text(free_kb: u64) -> String {
     format!(
@@ -2386,7 +2402,7 @@ mod pin_tests {
         assert!(!is_rate_limited("googleapi: Error 403: The user's Drive storage quota has been exceeded., storageQuotaExceeded"));
         assert!(!is_rate_limited("googleapi: Error 403: The download quota for this file has been exceeded., downloadQuotaExceeded"));
         let full = friendly_error("Failed to save config after 10 tries: write /home/x/.config/rclone/rclone.conf400513127: no space left on device");
-        assert!(full.starts_with("You don’t have enough disk space to sync some files.") && !full.contains("rclone.conf"));
+        assert_eq!(full, DISK_FULL, "no figures and no rclone.conf path");
         assert_eq!(friendly_error("directory not found"), "directory not found");
     }
 

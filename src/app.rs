@@ -818,10 +818,9 @@ impl DriveApp {
                         // Centre the text (and progress bar) in the row like the other columns.
                         let h = if matches!(a.state, ActState::Transfer { .. }) { 28.0 } else { 18.0 };
                         ui.add_space(((ui.available_height() - h) / 2.0).max(0.0));
-                        let r = ui.add(egui::Label::new(RichText::new(&txt).color(c)).truncate());
-                        if matches!(a.state, ActState::Error(_)) {
-                            r.on_hover_text(&txt);
-                        }
+                        // A cut-off label already shows its whole text when pointed at (a second
+                        // tooltip showed it twice).
+                        ui.add(egui::Label::new(RichText::new(&txt).color(c)).truncate());
                         if let ActState::Transfer { pct, .. } = a.state {
                             ui.add(egui::ProgressBar::new(pct / 100.0).desired_height(4.0).desired_width(ui.available_width().min(160.0)));
                         }
