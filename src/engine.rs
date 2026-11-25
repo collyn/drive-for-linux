@@ -122,6 +122,16 @@ impl Shared {
     fn load_history(&mut self) {
         if let Some(h) = std::fs::read_to_string(history_path()).ok().and_then(|t| serde_json::from_str::<History>(&t).ok()) {
             self.activity = h.activity;
+            // Errors saved by earlier versions in rclone's words get the plain wording too.
+            for a in &mut self.activity {
+                if let ActState::Error(m) = &mut a.state {
+                    let plain = friendly_error(m);
+                    if plain != *m {
+                        *m = plain;
+                        self.history_dirty = true;
+                    }
+                }
+            }
             self.notices = h.notices;
             // The same notice twice (from earlier versions) is shown once, newest kept.
             let before = self.notices.len();
@@ -1701,6 +1711,15 @@ impl Worker {
     }
 
     fn run_job(&mut self, label: &str, place: &str, upload: Option<bool>, args: Vec<String>, st: &Settings, root: Option<String>) -> bool {
+        // rclone rewrites its settings file (rclone.conf, with the sign-in) while it works; with the
+        // disk full that fails ("Failed to save config … no space left on device"). Like the
+        // original, nothing is written while less than min_local_free_space_for_writes is free.
+        if let Some(free) = free_kb(&config_dir().to_string_lossy()).filter(|f| *f < MIN_FREE_KB) {
+            let mut sh = self.shared.lock().unwrap();
+            sh.notify("Not enough disk space", &disk_full_text(free));
+            sh.job = None;
+            return false;
+        }
         let mut c = rclone();
         c.args(&args).args(["--use-json-log", crate::diag::rclone_verbosity(), "--stats", "1s", "--stats-log-level", "NOTICE"]);
         if let Some(bw) = st.bwlimit() {
@@ -1894,6 +1913,27 @@ pub fn desktop_notify(title: &str, body: &str) {
 }
 
 /// Free space (KiB) on the disk holding `path`.
+/// rclone's error in the words the person sees. A full disk gets the original's text ("You don’t
+/// have enough disk space to sync some files") instead of rclone's "Failed to save config after
+/// 10 tries: write …/rclone.conf…: no space left on device".
+fn friendly_error(msg: &str) -> String {
+    let lower = msg.to_ascii_lowercase();
+    if lower.contains("no space left on device") || lower.contains("disk quota exceeded") {
+        let free = free_kb(&config_dir().to_string_lossy()).unwrap_or(0);
+        disk_full_text(free)
+    } else {
+        msg.to_string()
+    }
+}
+
+fn disk_full_text(free_kb: u64) -> String {
+    format!(
+        "You don’t have enough disk space to sync some files. {} free on this computer; syncing waits until at least {} is free.",
+        crate::theme::human_bytes(free_kb * 1024),
+        crate::theme::human_bytes(MIN_FREE_KB * 1024)
+    )
+}
+
 fn free_kb(path: &str) -> Option<u64> {
     let out = Command::new("df").args(["-Pk", path]).stderr(Stdio::null()).output().ok()?;
     let text = String::from_utf8_lossy(&out.stdout);
@@ -2172,9 +2212,10 @@ fn read_log(err: impl std::io::Read, shared: &Arc<Mutex<Shared>>, ctx: &eframe::
         } else if !object.is_empty() && msg.starts_with("Deleted") {
             sh.push_activity(Activity { size: None, name: short_name(object), place: place.into(), state: ActState::Deleted, at: SystemTime::now() });
         } else if level == "error" {
+            let msg = friendly_error(msg);
             sh.last_error = Some(msg.trim().to_string());
             let name = if object.is_empty() { place.to_string() } else { short_name(object) };
-            sh.push_activity(Activity { size: None, name, place: place.into(), state: ActState::Error(msg.to_string()), at: SystemTime::now() });
+            sh.push_activity(Activity { size: None, name, place: place.into(), state: ActState::Error(msg.clone()), at: SystemTime::now() });
         }
         if sh.history_dirty && last_save.elapsed() > Duration::from_secs(10) {
             sh.save_history();
@@ -2344,6 +2385,9 @@ mod pin_tests {
         // A full Drive or a download quota isn't a rate limit (the original's error 31 / 235).
         assert!(!is_rate_limited("googleapi: Error 403: The user's Drive storage quota has been exceeded., storageQuotaExceeded"));
         assert!(!is_rate_limited("googleapi: Error 403: The download quota for this file has been exceeded., downloadQuotaExceeded"));
+        let full = friendly_error("Failed to save config after 10 tries: write /home/x/.config/rclone/rclone.conf400513127: no space left on device");
+        assert!(full.starts_with("You don’t have enough disk space to sync some files.") && !full.contains("rclone.conf"));
+        assert_eq!(friendly_error("directory not found"), "directory not found");
     }
 
     #[test]
